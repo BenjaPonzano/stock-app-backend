@@ -21,6 +21,7 @@ app.use('/api/ventas',        require('./routes/ventas'))
 app.use('/api/compras',       require('./routes/compras'))
 app.use('/api/elaboraciones', require('./routes/elaboraciones'))
 app.use('/api/recetas',       require('./routes/recetas'))
+app.use('/api/auth',         require('./routes/auth'))
 
 app.get('/', (req, res) => {
   res.json({ mensaje: 'API de Stock funcionando!' })
