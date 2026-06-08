@@ -2,7 +2,7 @@ const Sucursal = require('../models/Sucursal')
 
 function fmt(s) {
   return {
-    id:        s.idSucursal,
+    idSucursal:s.idSucursal,
     nombre:    s.nombre,
     direccion: s.direccion,
     telefono:  s.telefono,

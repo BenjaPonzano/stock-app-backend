@@ -4,8 +4,9 @@ const Ingrediente = require('../models/Ingrediente')
 const Producto = require('../models/Producto')
 const sequelize = require('../db')
 
-const getAll = async () => {
-  const ingresos = await IngresoMercaderia.findAll({ order: [['fecha', 'DESC']] })
+const getAll = async (idSucursal) => {
+  const where = idSucursal ? { idSucursal } : {};
+  const ingresos = await IngresoMercaderia.findAll({ where, order: [['fecha', 'DESC']] })
   return Promise.all(ingresos.map(async ing => {
     const [sumaIng, sumaProd] = await Promise.all([
       SumaIngrediente.findAll({ where: { idIngreso: ing.idIngreso } }),
@@ -35,8 +36,8 @@ const getAll = async () => {
 const create = async (data) => {
   const t = await sequelize.transaction()
   try {
-    const { proveedor, factura, obs, fecha, items } = data
-    const ingreso = await IngresoMercaderia.create({ proveedor, factura, obs, fecha }, { transaction: t })
+    const { proveedor, factura, obs, fecha, idSucursal, items } = data
+    const ingreso = await IngresoMercaderia.create({ proveedor, factura, obs, fecha, idSucursal }, { transaction: t })
     for (const item of items) {
       let itemId = item.id
       if (!itemId) {

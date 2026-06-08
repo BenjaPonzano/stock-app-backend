@@ -9,7 +9,8 @@ const Ingrediente = sequelize.define('Ingrediente', {
   unidad:        { type: DataTypes.STRING(20) },
   stock:         { type: DataTypes.INTEGER, defaultValue: 0 },
   stockMin:      { type: DataTypes.INTEGER, defaultValue: 0 },
-  emoji:         { type: DataTypes.STRING(10) }
+  emoji:         { type: DataTypes.STRING(10) },
+  idSucursal:    { type: DataTypes.INTEGER }
 }, { tableName: 'ingrediente', timestamps: false })
 
 module.exports = Ingrediente

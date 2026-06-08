@@ -3,8 +3,10 @@ const Ingrediente = require('../models/Ingrediente')
 const Producto = require('../models/Producto')
 const sequelize = require('../db')
 
-const getAll = async () => {
+const getAll = async (idSucursal) => {
+  const where = idSucursal ? { idSucursal } : {};
   const elaboraciones = await Elaboracion.findAll({
+    where,
     include: [{ model: DetalleElaboracion, as: 'ingredientes' }],
     order: [['fecha', 'DESC']]
   })

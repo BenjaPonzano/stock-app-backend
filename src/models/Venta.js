@@ -8,7 +8,8 @@ const Venta = sequelize.define('Venta', {
   total:      { type: DataTypes.DOUBLE, defaultValue: 0 },
   descuento:  { type: DataTypes.DOUBLE, defaultValue: 0 },
   tipoPago:   { type: DataTypes.STRING(20) },
-  fecha:      { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
+  fecha:      { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+  forzada:    { type: DataTypes.TINYINT, defaultValue: 0 }
 }, { tableName: 'compra', timestamps: false })
 
 const DetalleVenta = sequelize.define('DetalleVenta', {

@@ -2,7 +2,8 @@ const service = require('../services/elaboracion.service')
 
 const getAll = async (req, res) => {
   try {
-    res.json(await service.getAll())
+    const { sucursal } = req.query;
+    res.json(await service.getAll(sucursal))
   } catch (err) { res.status(500).json({ error: err.message }) }
 }
 

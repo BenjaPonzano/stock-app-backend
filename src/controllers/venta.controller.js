@@ -2,7 +2,8 @@ const service = require('../services/venta.service')
 
 const getAll = async (req, res) => {
   try {
-    res.json(await service.getAll())
+    const { sucursal } = req.query;
+    res.json(await service.getAll(sucursal));
   } catch (err) { res.status(500).json({ error: err.message }) }
 }
 
@@ -16,7 +17,11 @@ const getById = async (req, res) => {
 
 const create = async (req, res) => {
   try {
-    res.status(201).json(await service.create(req.body))
+    const resultado = await service.create(req.body)
+    if (resultado?.stockInsuficiente) {
+      return res.status(409).json({ stockInsuficiente: true, productos: resultado.productos })
+    }
+    res.status(201).json(resultado)
   } catch (err) { res.status(500).json({ error: err.message }) }
 }
 
