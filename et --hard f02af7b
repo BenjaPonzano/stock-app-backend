@@ -1,0 +1,12 @@
+[33m43f5b50[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mbenja.backend[m[33m, [m[1;31morigin/benja.backend[m[33m)[m Merge branch 'Balta_Back' of https://github.com/BenjaPonzano/stock-app-backend into benja.backend
+[33medc3c89[m Merge branch 'Balta_Back' of https://github.com/BenjaPonzano/stock-app-backend into benja.backend # Please enter a commit message to explain why this merge is necessary, # especially if it merges an updated upstream into a topic branch. # # Lines starting with '#' will be ignored, and an empty message aborts # the commit.
+[33m785eb4d[m[33m ([m[1;31morigin/Balta_Back[m[33m)[m feat: Boton sucursal terminado mas alerta confirmar venta sin stock
+[33mf02af7b[m feat: proteccion de todas las rutas con JWT(token en todas las rutas)
+[33m1c5c743[m feat: proteccion de rutas con jwt(token)
+[33m8ff08c0[m login con jwt
+[33m2a63d87[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Merge pull request #2 from BenjaPonzano/Rama-de-Mirko-Backend
+[33md0bd9b6[m Separacion de responsabilidades
+[33md51fe2e[m[33m ([m[1;32mmain[m[33m)[m Merge pull request #1 from BenjaPonzano/Rama-de-Mirko-Backend
+[33mb4bc1eb[m[33m ([m[1;31morigin/Rama-de-Mirko-Backend[m[33m)[m Creacion de BD y api rest y eliminacion de node_modules del repositorio
+[33m60e68bd[m feat: estructura inicial del backend
+[33mb3c2757[m Initial commit

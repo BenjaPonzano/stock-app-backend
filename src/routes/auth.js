@@ -29,7 +29,7 @@ router.post('/login', async (req, res) => {
       { expiresIn: '8h' }
     )
 
-    res.json({ token, tipoUsuario: usuario.tipoUsuario })
+    res.json({ token, tipoUsuario: usuario.tipoUsuario, nombre: usuario.nombre })
 
   } catch (error) {
     res.status(500).json({ mensaje: 'Error al iniciar sesión', error: error.message })
