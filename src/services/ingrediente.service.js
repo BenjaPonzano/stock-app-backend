@@ -18,7 +18,7 @@ const fmt = (ingrediente, precio) => ({
 })
 
 const getAll = async () => {
-  const ingredientes = await Ingrediente.findAll()
+  const ingredientes = await Ingrediente.findAll({ where: { activo: 1 } })
   return Promise.all(ingredientes.map(async i => fmt(i, await getPrecioActual(i.idIngrediente))))
 }
 
@@ -73,7 +73,7 @@ const update = async (id, data) => {
 const remove = async (id) => {
   const ingrediente = await Ingrediente.findByPk(id)
   if (!ingrediente) return false
-  await ingrediente.destroy()
+  await ingrediente.update({ activo: 0 })
   return true
 }
 

@@ -19,7 +19,7 @@ const fmt = (producto, precio) => ({
 })
 
 const getAll = async () => {
-  const productos = await Producto.findAll()
+  const productos = await Producto.findAll({ where: { activo: 1 } })
   return Promise.all(productos.map(async p => fmt(p, await getPrecioActual(p.idProducto))))
 }
 
@@ -74,9 +74,12 @@ const update = async (id, data) => {
 }
 
 const remove = async (id) => {
+  console.log('Intentando eliminar producto:', id)
   const producto = await Producto.findByPk(id)
+  console.log('Producto encontrado:', producto)
   if (!producto) return false
-  await producto.destroy()
+  await producto.update({ activo: 0 })
+  console.log('Producto marcado como inactivo')
   return true
 }
 
