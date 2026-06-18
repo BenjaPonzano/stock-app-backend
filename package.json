@@ -4,7 +4,8 @@
   "description": "Backend - Sistema de stock TP DSW",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/index.js",
+    "test": "jest --testEnvironment node"
   },
   "repository": {
     "type": "git",
@@ -26,5 +27,12 @@
     "jsonwebtoken": "^9.0.3",
     "mysql2": "^3.22.4",
     "sequelize": "^6.37.8"
+  },
+  "devDependencies": {
+    "jest": "^30.4.2",
+    "supertest": "^7.2.2"
+  },
+  "jest": {
+    "testEnvironment": "node"
   }
 }
