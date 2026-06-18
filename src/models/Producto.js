@@ -9,7 +9,8 @@ const Producto = sequelize.define('Producto', {
   unidad:      { type: DataTypes.STRING(20) },
   stock:       { type: DataTypes.INTEGER, defaultValue: 0 },
   stockMin:    { type: DataTypes.INTEGER, defaultValue: 0 },
-  emoji:       { type: DataTypes.STRING(10) }
+  emoji:       { type: DataTypes.STRING(10) },
+  activo:      { type: DataTypes.TINYINT, defaultValue: 1 }
 }, { tableName: 'producto', timestamps: false })
 
 module.exports = Producto
