@@ -23,13 +23,14 @@ router.post('/login', async (req, res) => {
       { 
         idUsuario: usuario.idUsuario,
         nombre: usuario.nombre,
-        tipoUsuario: usuario.tipoUsuario
+        tipoUsuario: usuario.tipoUsuario,
+        idSucursal: usuario.idSucursal
       },
       process.env.JWT_SECRET,
       { expiresIn: '8h' }
     )
 
-    res.json({ token, tipoUsuario: usuario.tipoUsuario, nombre: usuario.nombre })
+    res.json({ token, tipoUsuario: usuario.tipoUsuario, nombre: usuario.nombre, idSucursal: usuario.idSucursal })
 
   } catch (error) {
     res.status(500).json({ mensaje: 'Error al iniciar sesión', error: error.message })
