@@ -17,8 +17,10 @@ const fmt = (ingrediente, precio) => ({
   precio:      precio?.precio || 0
 })
 
-const getAll = async () => {
-  const ingredientes = await Ingrediente.findAll({ where: { activo: 1 } })
+const getAll = async (idSucursal) => {
+  const where = { activo: 1 }
+  if (idSucursal) where.idSucursal = idSucursal
+  const ingredientes = await Ingrediente.findAll({ where })
   return Promise.all(ingredientes.map(async i => fmt(i, await getPrecioActual(i.idIngrediente))))
 }
 

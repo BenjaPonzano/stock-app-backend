@@ -2,8 +2,10 @@ const { Venta, DetalleVenta } = require('../models/Venta')
 const Producto = require('../models/Producto')
 const sequelize = require('../db')
 
-const getAll = async () =>
-  Venta.findAll({ include: [{ model: DetalleVenta, as: 'items' }], order: [['fecha', 'DESC']] })
+const getAll = async (idSucursal) => {
+  const where = idSucursal ? { idSucursal } : {}
+  return Venta.findAll({ where, include: [{ model: DetalleVenta, as: 'items' }], order: [['fecha', 'DESC']] })
+}
 
 const getById = async (id) => {
   const venta = await Venta.findByPk(id, { include: [{ model: DetalleVenta, as: 'items' }] })
