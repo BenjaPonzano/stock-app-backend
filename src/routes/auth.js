@@ -3,6 +3,7 @@ const router = express.Router()
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
 const Usuario = require('../models/Usuario')
+const Sucursal = require('../models/Sucursal')
 
 // POST - Login
 router.post('/login', async (req, res) => {
@@ -14,9 +15,16 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ mensaje: 'Usuario o contraseña incorrectos' })
     }
 
-    const passwordValida = await bcrypt.compare(password, usuario.password)
+        const passwordValida = await bcrypt.compare(password, usuario.password)
     if (!passwordValida) {
       return res.status(401).json({ mensaje: 'Usuario o contraseña incorrectos' })
+    }
+
+    if (usuario.tipoUsuario !== 'admin') {
+      const sucursal = await Sucursal.findByPk(usuario.idSucursal)
+      if (!sucursal || sucursal.estado !== 1) {
+        return res.status(403).json({ mensaje: 'Tu sucursal está inactiva. Contactá a un administrador.' })
+      }
     }
 
     const token = jwt.sign(

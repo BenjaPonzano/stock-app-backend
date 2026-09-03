@@ -18,7 +18,11 @@ const getById = async (req, res) => {
 const create = async (req, res) => {
   try {
     res.status(201).json(await service.create(req.body))
-  } catch (err) { res.status(500).json({ error: err.message }) }
+  } catch (err) {
+    if (err.stockInsuficiente) {
+      return res.status(409).json({ error: 'stock_insuficiente', items: err.stockInsuficiente })
+    }
+    res.status(500).json({ error: err.message })
+  }
 }
-
 module.exports = { getAll, getById, create }

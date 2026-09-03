@@ -8,6 +8,7 @@ const Venta = sequelize.define('Venta', {
   total:      { type: DataTypes.DOUBLE, defaultValue: 0 },
   descuento:  { type: DataTypes.DOUBLE, defaultValue: 0 },
   tipoPago:   { type: DataTypes.STRING(20) },
+  forzada:    { type: DataTypes.BOOLEAN, defaultValue: false },
   fecha:      { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
 }, { tableName: 'compra', timestamps: false })
 
