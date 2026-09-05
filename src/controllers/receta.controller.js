@@ -2,7 +2,8 @@ const service = require('../services/receta.service')
 
 const getAll = async (req, res) => {
   try {
-    res.json(await service.getAll())
+    const sucursal = req.usuario.tipoUsuario === 'admin' ? req.query.sucursal : req.usuario.idSucursal
+    res.json(await service.getAll(sucursal))
   } catch (err) { res.status(500).json({ error: err.message }) }
 }
 

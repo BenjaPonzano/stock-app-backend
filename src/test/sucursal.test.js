@@ -8,7 +8,7 @@ beforeAll(async () => {
   await sequelize.authenticate()
   const res = await request(app)
     .post('/api/auth/login')
-    .send({ nombre: 'admin', password: 'admin123' })
+    .send({ nombre: 'Admin', password: '1234' })
   token = res.body.token
 })
 
