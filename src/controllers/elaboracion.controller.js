@@ -17,7 +17,9 @@ const getById = async (req, res) => {
 
 const create = async (req, res) => {
   try {
-    res.status(201).json(await service.create(req.body))
+    const idSucursal = req.usuario.tipoUsuario === 'admin' ? req.body.idSucursal : req.usuario.idSucursal
+    const idUsuario = req.usuario.idUsuario
+    res.status(201).json(await service.create({ ...req.body, idSucursal, idUsuario }))
   } catch (err) { res.status(500).json({ error: err.message }) }
 }
 
