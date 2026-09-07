@@ -1,5 +1,5 @@
 const IngresoMercaderia = require('../models/IngresoMercaderia')
-const { SumaIngrediente, SumaProducto } = require('../models/Compra')
+const { SumaIngrediente, SumaProducto } = require('../models/MovimientoStock')
 const Ingrediente = require('../models/Ingrediente')
 const Producto = require('../models/Producto')
 const sequelize = require('../db')
@@ -36,8 +36,8 @@ const getAll = async (idSucursal) => {
 const create = async (data) => {
   const t = await sequelize.transaction()
   try {
-    const { proveedor, factura, obs, fecha, items } = data
-    const ingreso = await IngresoMercaderia.create({ proveedor, factura, obs, fecha }, { transaction: t })
+    const { proveedor, factura, obs, fecha, items, idSucursal, idUsuario } = data
+    const ingreso = await IngresoMercaderia.create({ proveedor, factura, obs, fecha, idSucursal, idUsuario }, { transaction: t })
     for (const item of items) {
       let itemId = item.id
       if (!itemId) {
@@ -51,10 +51,10 @@ const create = async (data) => {
       }
       if (!itemId) continue
       if (item.tipo === 'ingrediente') {
-        await SumaIngrediente.create({ idIngreso: ingreso.idIngreso, idIngrediente: itemId, cant: item.cant, precioUnitario: item.precio, proveedor, fecha }, { transaction: t })
+        await SumaIngrediente.create({ idIngreso: ingreso.idIngreso, idIngrediente: itemId, idUsuario, idSucursal, cant: item.cant, precioUnitario: item.precio, proveedor, fecha }, { transaction: t })
         await Ingrediente.increment('stock', { by: item.cant, where: { idIngrediente: itemId }, transaction: t })
       } else {
-        await SumaProducto.create({ idIngreso: ingreso.idIngreso, idProducto: itemId, cant: item.cant, precioUnitario: item.precio, proveedor, fecha }, { transaction: t })
+        await SumaProducto.create({ idIngreso: ingreso.idIngreso, idProducto: itemId, idUsuario, idSucursal, cant: item.cant, precioUnitario: item.precio, proveedor, fecha }, { transaction: t })
         await Producto.increment('stock', { by: item.cant, where: { idProducto: itemId }, transaction: t })
       }
     }
