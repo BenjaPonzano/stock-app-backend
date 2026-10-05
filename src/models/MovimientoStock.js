@@ -7,7 +7,7 @@ const SumaIngrediente = sequelize.define('SumaIngrediente', {
   idIngrediente:  { type: DataTypes.INTEGER },
   idUsuario:      { type: DataTypes.INTEGER },
   idSucursal:     { type: DataTypes.INTEGER },
-  cant:           { type: DataTypes.INTEGER, allowNull: false },
+  cant:           { type: DataTypes.DOUBLE, allowNull: false },
   precioUnitario: { type: DataTypes.DOUBLE },
   proveedor:      { type: DataTypes.STRING(100) },
   fecha:          { type: DataTypes.DATE, defaultValue: DataTypes.NOW }

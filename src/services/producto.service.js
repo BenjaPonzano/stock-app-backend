@@ -11,11 +11,11 @@ const fmt = (producto, precio) => ({
   id:           producto.idProducto,
   nombre:       producto.nombre,
   descripcion:  producto.descripcion,
-  categoria:    producto.categoria,
   unidad:       producto.unidad,
   stock:        producto.stock,
   stockMin:     producto.stockMin,
   emoji:        producto.emoji,
+  origen:       producto.origen,
   precioVenta:  precio?.precio       || 0,
   precioCompra: precio?.precioCompra || 0
 })
@@ -58,11 +58,11 @@ const propagarAOtrasSucursales = async (productoOriginal, precioVenta, precioCom
     const copia = await Producto.create({
       nombre:      productoOriginal.nombre,
       descripcion: productoOriginal.descripcion,
-      categoria:   productoOriginal.categoria,
       unidad:      productoOriginal.unidad,
       stock:       0,
       stockMin:    productoOriginal.stockMin,
       emoji:       productoOriginal.emoji,
+      origen:      productoOriginal.origen,
       activo:      1,
       idSucursal:  s.idSucursal
     }, { transaction })
