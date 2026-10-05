@@ -11,7 +11,6 @@ const fmt = (ingrediente, precio) => ({
   id:          ingrediente.idIngrediente,
   nombre:      ingrediente.nombre,
   descripcion: ingrediente.descripcion,
-  categoria:   ingrediente.categoria,
   unidad:      ingrediente.unidad,
   stock:       ingrediente.stock,
   stockMin:    ingrediente.stockMin,
@@ -53,7 +52,6 @@ const propagarAOtrasSucursales = async (ingredienteOriginal, precio, transaction
     const copia = await Ingrediente.create({
       nombre:      ingredienteOriginal.nombre,
       descripcion: ingredienteOriginal.descripcion,
-      categoria:   ingredienteOriginal.categoria,
       unidad:      ingredienteOriginal.unidad,
       stock:       0,
       stockMin:    ingredienteOriginal.stockMin,

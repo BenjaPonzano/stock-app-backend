@@ -4,6 +4,7 @@ const Producto = require('../models/Producto')
 const Sucursal = require('../models/Sucursal')
 const sequelize = require('../db')
 const { Op } = require('sequelize')
+const { sonCompatibles } = require('../utils/unidades')
 
 DetalleReceta.belongsTo(Ingrediente, { foreignKey: 'idIngrediente', as: 'Ingrediente' })
 Receta.belongsTo(Producto, { foreignKey: 'idProducto', as: 'Producto' })
@@ -93,10 +94,30 @@ const copiarAOtraSucursal = async (recetaOriginal, ingredientesConNombre, produc
   return avisos
 }
 
+// Cada ingrediente de la receta puede usar una unidad distinta a la del stock,
+// siempre que sea de la misma familia (g/kg, ml/l). Si no se indica, usa la del ingrediente.
+const normalizarYValidarUnidades = async (ingredientes, transaction) => {
+  const resultado = []
+  for (const i of ingredientes || []) {
+    const ing = await Ingrediente.findByPk(i.idIngrediente, { transaction })
+    if (!ing) throw Object.assign(new Error(`El ingrediente ${i.idIngrediente} no existe`), { status: 400 })
+    const unidad = i.unidad || ing.unidad
+    if (ing.unidad && unidad && !sonCompatibles(unidad, ing.unidad)) {
+      throw Object.assign(
+        new Error(`"${ing.nombre}" se lleva en ${ing.unidad}: en la receta no se puede usar ${unidad}`),
+        { status: 400 }
+      )
+    }
+    resultado.push({ ...i, unidad })
+  }
+  return resultado
+}
+
 const create = async (data) => {
   const t = await sequelize.transaction()
   try {
-    const { ingredientes, ...recetaData } = data
+    const { ingredientes: ingredientesEnviados, ...recetaData } = data
+    const ingredientes = await normalizarYValidarUnidades(ingredientesEnviados, t)
     const receta = await Receta.create(recetaData, { transaction: t })
     if (ingredientes?.length > 0) {
       await DetalleReceta.bulkCreate(
@@ -135,7 +156,8 @@ const update = async (id, data) => {
   try {
     const receta = await Receta.findByPk(id)
     if (!receta) return null
-    const { ingredientes, ...recetaData } = data
+    const { ingredientes: ingredientesEnviados, ...recetaData } = data
+    const ingredientes = ingredientesEnviados ? await normalizarYValidarUnidades(ingredientesEnviados, t) : null
     await receta.update(recetaData, { transaction: t })
     if (ingredientes) {
       await DetalleReceta.destroy({ where: { idReceta: receta.idReceta }, transaction: t })

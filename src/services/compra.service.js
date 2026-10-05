@@ -52,7 +52,10 @@ const create = async (data) => {
       if (!itemId) continue
       if (item.tipo === 'ingrediente') {
         await SumaIngrediente.create({ idIngreso: ingreso.idIngreso, idIngrediente: itemId, idUsuario, idSucursal, cant: item.cant, precioUnitario: item.precio, proveedor, fecha }, { transaction: t })
-        await Ingrediente.increment('stock', { by: item.cant, where: { idIngrediente: itemId }, transaction: t })
+        await Ingrediente.update(
+          { stock: sequelize.literal(`ROUND(stock + ${Number(item.cant)}, 3)`) },
+          { where: { idIngrediente: itemId }, transaction: t }
+        )
       } else {
         await SumaProducto.create({ idIngreso: ingreso.idIngreso, idProducto: itemId, idUsuario, idSucursal, cant: item.cant, precioUnitario: item.precio, proveedor, fecha }, { transaction: t })
         await Producto.increment('stock', { by: item.cant, where: { idProducto: itemId }, transaction: t })

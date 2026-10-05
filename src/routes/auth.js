@@ -4,9 +4,10 @@ const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
 const Usuario = require('../models/Usuario')
 const Sucursal = require('../models/Sucursal')
+const validaciones = require('../middlewares/validaciones')
 
 // POST - Login
-router.post('/login', async (req, res) => {
+router.post('/login', validaciones.login, async (req, res) => {
   try {
     const { nombre, password } = req.body
 
@@ -15,7 +16,7 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ mensaje: 'Usuario o contraseña incorrectos' })
     }
 
-        const passwordValida = await bcrypt.compare(password, usuario.password)
+    const passwordValida = await bcrypt.compare(password, usuario.password)
     if (!passwordValida) {
       return res.status(401).json({ mensaje: 'Usuario o contraseña incorrectos' })
     }
