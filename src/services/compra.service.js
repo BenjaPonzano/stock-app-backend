@@ -2,6 +2,8 @@ const IngresoMercaderia = require('../models/IngresoMercaderia')
 const { SumaIngrediente, SumaProducto } = require('../models/MovimientoStock')
 const Ingrediente = require('../models/Ingrediente')
 const Producto = require('../models/Producto')
+const PrecioProducto = require('../models/PrecioProducto')
+const PrecioIngrediente = require('../models/PrecioIngrediente')
 const sequelize = require('../db')
 const { Op } = require('sequelize')
 
@@ -50,6 +52,33 @@ const getAll = async (idSucursal) => {
   })
 }
 
+// El precio pagado en la compra pasa a ser el precio de compra vigente del ítem
+// (para un producto, su precioCompra sin tocar el de venta; para un ingrediente, su precio).
+// Como el catálogo es compartido, se aplica también a la misma copia en las otras sucursales
+// (mismo nombre), igual que al editar un precio a mano. Queda en el historial con fecha de hoy.
+const actualizarPrecioCompra = async (Modelo, registro, precio, transaction) => {
+  if (!(precio > 0)) return
+  const fecha_desde = new Date().toISOString().slice(0, 10)
+  const copias = await Modelo.findAll({
+    where: {
+      activo: 1,
+      [Op.and]: [sequelize.where(
+        sequelize.fn('LOWER', sequelize.fn('TRIM', sequelize.col('nombre'))),
+        registro.nombre.trim().toLowerCase()
+      )]
+    },
+    transaction
+  })
+  for (const copia of copias) {
+    if (Modelo === Ingrediente) {
+      await PrecioIngrediente.upsert({ idIngrediente: copia.idIngrediente, fecha_desde, precio }, { transaction })
+    } else {
+      const vigente = await PrecioProducto.findOne({ where: { idProducto: copia.idProducto }, order: [['fecha_desde', 'DESC']], transaction })
+      await PrecioProducto.upsert({ idProducto: copia.idProducto, fecha_desde, precio: vigente?.precio || 0, precioCompra: precio }, { transaction })
+    }
+  }
+}
+
 const create = async (data) => {
   const t = await sequelize.transaction()
   try {
@@ -74,6 +103,7 @@ const create = async (data) => {
         await SumaProducto.create({ idIngreso: ingreso.idIngreso, idProducto: itemId, idUsuario, idSucursal, cant: item.cant, precioUnitario: item.precio, proveedor, fecha }, { transaction: t })
         await Producto.increment('stock', { by: item.cant, where: { idProducto: itemId }, transaction: t })
       }
+      await actualizarPrecioCompra(Modelo, registro, Number(item.precio), t)
     }
     await t.commit()
     return { mensaje: 'Compra registrada', idIngreso: ingreso.idIngreso }
