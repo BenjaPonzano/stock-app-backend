@@ -1,16 +1,24 @@
 const { Venta, DetalleVenta } = require('../models/Venta')
 const Producto = require('../models/Producto')
+const Usuario = require('../models/Usuario')
 const sequelize = require('../db')
 const { Op } = require('sequelize')
 
-// El detalle de venta solo guarda idProducto: se agregan nombre y emoji de cada
-// producto buscándolos todos juntos en una sola consulta (sin N+1).
+// El detalle de venta solo guarda idProducto y la venta solo idUsuario: se agregan
+// nombre y emoji de cada producto y el nombre del vendedor, buscándolos todos juntos
+// en una consulta por tabla (sin N+1).
 const agregarNombres = async (ventas) => {
   const ids = [...new Set(ventas.flatMap(v => (v.items || []).map(i => i.idProducto)))]
-  const productos = ids.length ? await Producto.findAll({ where: { idProducto: { [Op.in]: ids } } }) : []
+  const idsUsuario = [...new Set(ventas.map(v => v.idUsuario).filter(Boolean))]
+  const [productos, usuarios] = await Promise.all([
+    ids.length ? Producto.findAll({ where: { idProducto: { [Op.in]: ids } } }) : [],
+    idsUsuario.length ? Usuario.findAll({ where: { idUsuario: { [Op.in]: idsUsuario } }, attributes: ['idUsuario', 'nombre', 'apellido'] }) : []
+  ])
   const porId = Object.fromEntries(productos.map(p => [p.idProducto, p]))
+  const usuarioPorId = Object.fromEntries(usuarios.map(u => [u.idUsuario, `${u.nombre} ${u.apellido}`.trim()]))
   return ventas.map(v => {
     const venta = v.toJSON()
+    venta.vendedor = usuarioPorId[venta.idUsuario] || null
     venta.items = (venta.items || []).map(i => ({
       ...i,
       nombre: porId[i.idProducto]?.nombre || '',
