@@ -1,15 +1,36 @@
 const { Venta, DetalleVenta } = require('../models/Venta')
 const Producto = require('../models/Producto')
 const sequelize = require('../db')
+const { Op } = require('sequelize')
+
+// El detalle de venta solo guarda idProducto: se agregan nombre y emoji de cada
+// producto buscándolos todos juntos en una sola consulta (sin N+1).
+const agregarNombres = async (ventas) => {
+  const ids = [...new Set(ventas.flatMap(v => (v.items || []).map(i => i.idProducto)))]
+  const productos = ids.length ? await Producto.findAll({ where: { idProducto: { [Op.in]: ids } } }) : []
+  const porId = Object.fromEntries(productos.map(p => [p.idProducto, p]))
+  return ventas.map(v => {
+    const venta = v.toJSON()
+    venta.items = (venta.items || []).map(i => ({
+      ...i,
+      nombre: porId[i.idProducto]?.nombre || '',
+      emoji:  porId[i.idProducto]?.emoji || null
+    }))
+    return venta
+  })
+}
 
 const getAll = async (idSucursal) => {
   const where = idSucursal ? { idSucursal } : {}
-  return Venta.findAll({ where, include: [{ model: DetalleVenta, as: 'items' }], order: [['fecha', 'DESC']] })
+  const ventas = await Venta.findAll({ where, include: [{ model: DetalleVenta, as: 'items' }], order: [['fecha', 'DESC']] })
+  return agregarNombres(ventas)
 }
 
 const getById = async (id) => {
   const venta = await Venta.findByPk(id, { include: [{ model: DetalleVenta, as: 'items' }] })
-  return venta || null
+  if (!venta) return null
+  const [conNombres] = await agregarNombres([venta])
+  return conNombres
 }
 
 const create = async (data) => {
