@@ -84,7 +84,12 @@ const update = async (id, data) => {
 const remove = async (id) => {
   const sucursal = await Sucursal.findOne({ where: { idSucursal: id, activo: 1 } })
   if (!sucursal) return false
-  await sucursal.update({ activo: 0, estado: 0 })
+  // Su catálogo también se da de baja, para que no queden productos/ingredientes de una sucursal que ya no existe
+  await sequelize.transaction(async (t) => {
+    await sucursal.update({ activo: 0, estado: 0 }, { transaction: t })
+    await Producto.update({ activo: 0 }, { where: { idSucursal: id }, transaction: t })
+    await Ingrediente.update({ activo: 0 }, { where: { idSucursal: id }, transaction: t })
+  })
   return true
 }
 
