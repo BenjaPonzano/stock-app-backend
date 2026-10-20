@@ -1,5 +1,39 @@
 const Sucursal = require('../models/Sucursal')
+const sequelize = require('../db')
+const Producto = require('../models/Producto')
+const PrecioProducto = require('../models/PrecioProducto')
+const Ingrediente = require('../models/Ingrediente')
+const PrecioIngrediente = require('../models/PrecioIngrediente')
 
+const precioVigente = (precios = []) =>
+  precios.reduce((ult, p) => (!ult || p.fecha_desde > ult.fecha_desde ? p : ult), null)
+
+// Copia a la sucursal nueva los productos e ingredientes que ya existen (uno por nombre), con stock 0
+const copiarCatalogo = async (idSucursal, transaction) => {
+  const hoy = new Date().toISOString().slice(0, 10)
+
+  const productos = await Producto.findAll({ where: { activo: 1 }, include: [{ model: PrecioProducto, as: 'precios' }], transaction })
+  const prodVistos = new Set()
+  for (const p of productos) {
+    const clave = p.nombre.trim().toLowerCase()
+    if (prodVistos.has(clave)) continue
+    prodVistos.add(clave)
+    const copia = await Producto.create({ nombre: p.nombre, descripcion: p.descripcion, unidad: p.unidad, stock: 0, stockMin: p.stockMin, emoji: p.emoji, origen: p.origen, activo: 1, idSucursal }, { transaction })
+    const precio = precioVigente(p.precios)
+    if (precio) await PrecioProducto.create({ idProducto: copia.idProducto, fecha_desde: hoy, precio: precio.precio, precioCompra: precio.precioCompra }, { transaction })
+  }
+
+  const ingredientes = await Ingrediente.findAll({ where: { activo: 1 }, include: [{ model: PrecioIngrediente, as: 'precios' }], transaction })
+  const ingVistos = new Set()
+  for (const i of ingredientes) {
+    const clave = i.nombre.trim().toLowerCase()
+    if (ingVistos.has(clave)) continue
+    ingVistos.add(clave)
+    const copia = await Ingrediente.create({ nombre: i.nombre, descripcion: i.descripcion, unidad: i.unidad, stock: 0, stockMin: i.stockMin, emoji: i.emoji, activo: 1, idSucursal }, { transaction })
+    const precio = precioVigente(i.precios)
+    if (precio) await PrecioIngrediente.create({ idIngrediente: copia.idIngrediente, fecha_desde: hoy, precio: precio.precio }, { transaction })
+  }
+}
 function fmt(s) {
   return {
     id:        s.idSucursal,
@@ -23,9 +57,17 @@ const getById = async (id) => {
 }
 
 const create = async (data) => {
-  const { activa, ...rest } = data
-  const sucursal = await Sucursal.create({ ...rest, estado: activa ? 1 : 0 })
-  return fmt(sucursal)
+  const t = await sequelize.transaction()
+  try {
+    const { activa, ...rest } = data
+    const sucursal = await Sucursal.create({ ...rest, estado: activa ? 1 : 0 }, { transaction: t })
+    await copiarCatalogo(sucursal.idSucursal, t)
+    await t.commit()
+    return fmt(sucursal)
+  } catch (err) {
+    await t.rollback()
+    throw err
+  }
 }
 
 const update = async (id, data) => {
