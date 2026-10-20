@@ -6,7 +6,8 @@ const Receta = sequelize.define('Receta', {
   nombre:      { type: DataTypes.STRING(100), allowNull: false },
   descripcion: { type: DataTypes.STRING(255) },
   idProducto:  { type: DataTypes.INTEGER },
-  cantPorLote: { type: DataTypes.INTEGER, defaultValue: 1 }
+  cantPorLote: { type: DataTypes.INTEGER, defaultValue: 1 },
+  idSucursal:  { type: DataTypes.INTEGER, allowNull: false }
 }, { tableName: 'receta', timestamps: false })
 
 const DetalleReceta = sequelize.define('DetalleReceta', {

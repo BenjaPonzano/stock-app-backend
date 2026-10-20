@@ -1,23 +1,26 @@
 const service = require('../services/elaboracion.service')
 
-const getAll = async (req, res) => {
+const getAll = async (req, res, next) => {
   try {
-    res.json(await service.getAll())
-  } catch (err) { res.status(500).json({ error: err.message }) }
+    const sucursal = req.usuario.tipoUsuario === 'admin' ? req.query.sucursal : req.usuario.idSucursal
+    res.json(await service.getAll(sucursal))
+  } catch (err) { next(err) }
 }
 
-const getById = async (req, res) => {
+const getById = async (req, res, next) => {
   try {
     const data = await service.getById(req.params.id)
     if (!data) return res.status(404).json({ error: 'Elaboración no encontrada' })
     res.json(data)
-  } catch (err) { res.status(500).json({ error: err.message }) }
+  } catch (err) { next(err) }
 }
 
-const create = async (req, res) => {
+const create = async (req, res, next) => {
   try {
-    res.status(201).json(await service.create(req.body))
-  } catch (err) { res.status(500).json({ error: err.message }) }
+    const idSucursal = req.usuario.tipoUsuario === 'admin' ? req.body.idSucursal : req.usuario.idSucursal
+    const idUsuario = req.usuario.idUsuario
+    res.status(201).json(await service.create({ ...req.body, idSucursal, idUsuario }))
+  } catch (err) { next(err) }
 }
 
 module.exports = { getAll, getById, create }

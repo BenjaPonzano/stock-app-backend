@@ -5,12 +5,12 @@ const Ingrediente = sequelize.define('Ingrediente', {
   idIngrediente: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   nombre:        { type: DataTypes.STRING(100), allowNull: false },
   descripcion:   { type: DataTypes.STRING(255) },
-  categoria:     { type: DataTypes.STRING(50) },
   unidad:        { type: DataTypes.STRING(20) },
-  stock:         { type: DataTypes.INTEGER, defaultValue: 0 },
-  stockMin:      { type: DataTypes.INTEGER, defaultValue: 0 },
+  stock:         { type: DataTypes.DOUBLE, defaultValue: 0 },   // en la unidad del ingrediente (admite decimales: 0,3 kg)
+  stockMin:      { type: DataTypes.DOUBLE, defaultValue: 0 },
   emoji:         { type: DataTypes.STRING(10) },
-  activo:        { type: DataTypes.TINYINT, defaultValue: 1 }
+  activo:        { type: DataTypes.TINYINT, defaultValue: 1 },
+  idSucursal:    { type: DataTypes.INTEGER }
 }, { tableName: 'ingrediente', timestamps: false })
 
 module.exports = Ingrediente

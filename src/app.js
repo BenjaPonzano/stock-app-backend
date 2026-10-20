@@ -1,6 +1,7 @@
 const express = require('express')
 const cors = require('cors')
 const dotenv = require('dotenv')
+const { noEncontrada, manejarErrores } = require('./middlewares/errores')
 
 dotenv.config()
 
@@ -22,5 +23,8 @@ app.use('/api/auth',          require('./routes/auth'))
 app.get('/', (req, res) => {
   res.json({ mensaje: 'API de Stock funcionando!' })
 })
+
+app.use(noEncontrada)
+app.use(manejarErrores)
 
 module.exports = app
