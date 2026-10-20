@@ -8,7 +8,8 @@ const Elaboracion = sequelize.define('Elaboracion', {
   idProducto:    { type: DataTypes.INTEGER },
   idUsuario:     { type: DataTypes.INTEGER },
   idSucursal:    { type: DataTypes.INTEGER },
-  cantidad:      { type: DataTypes.INTEGER, allowNull: false },
+  cantidad:      { type: DataTypes.INTEGER, allowNull: false },   // cantidad de lotes
+  unidades:      { type: DataTypes.INTEGER },                     // unidades producidas = lotes x cantPorLote de la receta
   obs:           { type: DataTypes.STRING(255) },
   fecha:         { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
 }, { tableName: 'elaboracion', timestamps: false })
