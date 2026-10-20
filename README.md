@@ -9,7 +9,8 @@ y autenticación con **JWT**. Frontend: [stock-app-frontend](https://github.com/
 ## Requisitos
 
 - Node.js 20 o superior
-- MySQL en ejecución con una base creada (por defecto `cocina_dsw`)
+- MySQL en ejecución con una base creada, aunque esté vacía (por defecto `cocina_dsw`):
+  `CREATE DATABASE cocina_dsw;`
 
 ## Puesta en marcha
 
@@ -22,7 +23,12 @@ npm start
 La API queda en `http://localhost:3001`. El frontend espera ese puerto: **no usar 3000**,
 que lo ocupa el servidor de desarrollo de React.
 
-Al arrancar, el servidor aplica solo los ajustes de esquema pendientes
+La primera vez, con la base vacía, el servidor **crea todas las tablas solo** (`src/inicializar.js`)
+y, si no hay ningún usuario, crea la sucursal "Casa Central" y un usuario **admin / admin123**
+(se puede cambiar con `ADMIN_NOMBRE` y `ADMIN_PASSWORD`). Con eso ya se puede entrar desde el frontend
+y cargar el resto. Si la base ya tiene datos, no toca nada.
+
+Además, al arrancar el servidor aplica solo los ajustes de esquema pendientes
 (`src/migraciones.js`; hoy: las columnas `producto.origen` y `elaboracion.unidades`). Los mismos cambios están como
 script SQL en la carpeta `sql/` por si se prefiere ejecutarlos a mano.
 
@@ -34,6 +40,8 @@ Están todas documentadas en `.env.example`. El `.env` real no se sube al reposi
 |---|---|
 | `PORT` | Puerto de la API (3001). |
 | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | Conexión a MySQL. |
+| `DB_SSL` | `true` si la base está en la nube y pide SSL (ej. Aiven). En local, `false`. |
+| `ADMIN_NOMBRE`, `ADMIN_PASSWORD` | Usuario admin que se crea la primera vez (por defecto `admin` / `admin123`). |
 | `JWT_SECRET` | Clave para firmar y validar los tokens del login. Es obligatoria. |
 
 ## Arquitectura
