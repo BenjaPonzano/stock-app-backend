@@ -46,11 +46,22 @@ const permitirDecimalesEnIngredientes = async () => {
   }
 }
 
+// Borrado lógico de sucursales: columna sucursal.activo (1 = vigente, 0 = eliminada).
+const agregarActivoASucursal = async () => {
+  const qi = sequelize.getQueryInterface()
+  const columnas = await qi.describeTable('sucursal')
+  if (columnas.activo) return
+
+  await sequelize.query('ALTER TABLE sucursal ADD COLUMN activo TINYINT NOT NULL DEFAULT 1')
+  console.log('Migración: columna sucursal.activo creada')
+}
+
 const aplicarMigraciones = async () => {
   try {
     await agregarOrigenAProducto()
     await agregarUnidadesAElaboracion()
     await permitirDecimalesEnIngredientes()
+    await agregarActivoASucursal()
   } catch (err) {
     // No frena el servidor: el script equivalente está en sql/agregar_origen_producto.sql
     console.error('No se pudo aplicar la migración automática:', err.message)
