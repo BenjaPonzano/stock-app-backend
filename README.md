@@ -23,7 +23,7 @@ La API queda en `http://localhost:3001`. El frontend espera ese puerto: **no usa
 que lo ocupa el servidor de desarrollo de React.
 
 Al arrancar, el servidor aplica solo los ajustes de esquema pendientes
-(`src/migraciones.js`; hoy: las columnas `producto.origen` y `elaboracion.unidades`). Los mismos cambios están como
+(`src/migraciones.js`; hoy: las columnas `producto.origen`, `elaboracion.unidades` y `sucursal.activo`). Los mismos cambios están como
 script SQL en la carpeta `sql/` por si se prefiere ejecutarlos a mano.
 
 ## Variables de entorno (`.env`)
