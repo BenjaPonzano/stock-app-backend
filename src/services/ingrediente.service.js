@@ -18,11 +18,20 @@ const fmt = (ingrediente, precio) => ({
   precio:      precio?.precio || 0
 })
 
+// De todos los precios de un ingrediente, el vigente es el de fecha_desde más reciente.
+const precioVigente = (precios = []) =>
+  precios.reduce((ultimo, p) => (!ultimo || p.fecha_desde > ultimo.fecha_desde ? p : ultimo), null)
+
+// Trae los ingredientes con sus precios en una sola consulta (include), en vez de
+// hacer una consulta de precio por cada ingrediente (problema N+1).
 const getAll = async (idSucursal) => {
   const where = { activo: 1 }
   if (idSucursal) where.idSucursal = idSucursal
-  const ingredientes = await Ingrediente.findAll({ where })
-  return Promise.all(ingredientes.map(async i => fmt(i, await getPrecioActual(i.idIngrediente))))
+  const ingredientes = await Ingrediente.findAll({
+    where,
+    include: [{ model: PrecioIngrediente, as: 'precios' }]
+  })
+  return ingredientes.map(i => fmt(i, precioVigente(i.precios)))
 }
 
 const getById = async (id) => {

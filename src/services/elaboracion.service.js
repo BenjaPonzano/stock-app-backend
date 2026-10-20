@@ -4,22 +4,27 @@ const Producto = require('../models/Producto')
 const { Receta, DetalleReceta } = require('../models/Receta')
 const { convertir, redondear } = require('../utils/unidades')
 const sequelize = require('../db')
+const { Op } = require('sequelize')
 
-const getAll = async (idSucursal) => {
-  const where = idSucursal ? { idSucursal } : {}
-  const elaboraciones = await Elaboracion.findAll({
-    where,
-    include: [{ model: DetalleElaboracion, as: 'ingredientes' }],
-    order: [['fecha', 'DESC']]
-  })
-  return Promise.all(elaboraciones.map(async e => {
-    const producto = await Producto.findByPk(e.idProducto)
-    const ingredientesConsumidos = await Promise.all(
-      (e.ingredientes || []).map(async d => {
-        const ing = await Ingrediente.findByPk(d.idIngrediente)
-        return { nombre: ing?.nombre || '', cant: d.cant, unidad: ing?.unidad || '' }
-      })
-    )
+// Convierte las elaboraciones de la base al formato que usa el frontend.
+const formatear = async (elaboraciones) => {
+  // Los nombres de productos e ingredientes se buscan todos juntos (2 consultas),
+  // en vez de una consulta por cada elaboración y por cada ingrediente (N+1).
+  const idsProducto = [...new Set(elaboraciones.map(e => e.idProducto))]
+  const idsIngrediente = [...new Set(elaboraciones.flatMap(e => (e.ingredientes || []).map(d => d.idIngrediente)))]
+  const [productos, ingredientes] = await Promise.all([
+    idsProducto.length ? Producto.findAll({ where: { idProducto: { [Op.in]: idsProducto } } }) : [],
+    idsIngrediente.length ? Ingrediente.findAll({ where: { idIngrediente: { [Op.in]: idsIngrediente } } }) : []
+  ])
+  const productoPorId = Object.fromEntries(productos.map(p => [p.idProducto, p]))
+  const ingredientePorId = Object.fromEntries(ingredientes.map(i => [i.idIngrediente, i]))
+
+  return elaboraciones.map(e => {
+    const producto = productoPorId[e.idProducto]
+    const ingredientesConsumidos = (e.ingredientes || []).map(d => {
+      const ing = ingredientePorId[d.idIngrediente]
+      return { nombre: ing?.nombre || '', cant: d.cant, unidad: ing?.unidad || '' }
+    })
     return {
       id:            'E-' + String(e.idElaboracion).padStart(4, '0'),
       idElaboracion: e.idElaboracion,
@@ -38,7 +43,26 @@ const getAll = async (idSucursal) => {
         unidad:   producto?.unidad || 'u'
       }
     }
-  }))
+  })
+}
+
+const getAll = async (idSucursal) => {
+  const where = idSucursal ? { idSucursal } : {}
+  const elaboraciones = await Elaboracion.findAll({
+    where,
+    include: [{ model: DetalleElaboracion, as: 'ingredientes' }],
+    order: [['fecha', 'DESC']]
+  })
+  return formatear(elaboraciones)
+}
+
+const getById = async (id) => {
+  const elaboracion = await Elaboracion.findByPk(id, {
+    include: [{ model: DetalleElaboracion, as: 'ingredientes' }]
+  })
+  if (!elaboracion) return null
+  const [formateada] = await formatear([elaboracion])
+  return formateada
 }
 
 const create = async (data) => {
@@ -99,4 +123,4 @@ const create = async (data) => {
   }
 }
 
-module.exports = { getAll, create }
+module.exports = { getAll, getById, create }
