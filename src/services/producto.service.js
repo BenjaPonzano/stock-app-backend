@@ -106,12 +106,32 @@ const create = async (data) => {
   }
 }
 
+// Datos del catálogo que son iguales en todas las sucursales. El stock y el stock
+// mínimo no se copian: son propios de cada sucursal.
+const CAMPOS_COMPARTIDOS = ['nombre', 'descripcion', 'unidad', 'emoji', 'origen']
+
+// Las copias del mismo producto en las otras sucursales (mismo nombre, sin
+// importar mayúsculas ni espacios de más).
+const copiasEnOtrasSucursales = (producto, transaction) =>
+  Producto.findAll({
+    where: {
+      activo: 1,
+      idSucursal: { [Op.ne]: producto.idSucursal },
+      [Op.and]: [sequelize.where(
+        sequelize.fn('LOWER', sequelize.fn('TRIM', sequelize.col('nombre'))),
+        producto.nombre.trim().toLowerCase()
+      )]
+    },
+    transaction
+  })
+
 const update = async (id, data) => {
   const t = await sequelize.transaction()
   try {
     const producto = await Producto.findByPk(id)
-    if (!producto) return null
+    if (!producto) { await t.rollback(); return null }
     const { precioVenta, precioCompra, ...productoData } = data
+    const copias = await copiasEnOtrasSucursales(producto, t)
     await producto.update(productoData, { transaction: t })
     if (precioVenta !== undefined) {
       await PrecioProducto.upsert({
@@ -121,6 +141,19 @@ const update = async (id, data) => {
         precioCompra: precioCompra || 0
       }, { transaction: t })
     }
+    // Lo editado en una sucursal se aplica igual en las demás (salvo el stock).
+    const compartidos = Object.fromEntries(CAMPOS_COMPARTIDOS.filter(c => c in productoData).map(c => [c, productoData[c]]))
+    for (const copia of copias) {
+      await copia.update(compartidos, { transaction: t })
+      if (precioVenta !== undefined) {
+        await PrecioProducto.upsert({
+          idProducto:    copia.idProducto,
+          fecha_desde:   new Date().toISOString().slice(0, 10),
+          precio:        precioVenta,
+          precioCompra:  precioCompra || 0
+        }, { transaction: t })
+      }
+    }
     await t.commit()
     return fmt(producto, await getPrecioActual(producto.idProducto))
   } catch (err) {
@@ -129,10 +162,12 @@ const update = async (id, data) => {
   }
 }
 
+// Borrado lógico en todas las sucursales, igual que la edición.
 const remove = async (id) => {
   const producto = await Producto.findByPk(id)
   if (!producto) return false
-  await producto.update({ activo: 0 })
+  const copias = await copiasEnOtrasSucursales(producto)
+  for (const r of [producto, ...copias]) await r.update({ activo: 0 })
   return true
 }
 
