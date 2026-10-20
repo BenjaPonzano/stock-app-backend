@@ -8,7 +8,11 @@ const sequelize = new Sequelize(
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
     dialect: 'mysql',
-    logging: false
+    logging: false,
+    // Las bases en la nube (ej. Aiven) piden conexión cifrada: poner DB_SSL=true en el .env
+    dialectOptions: process.env.DB_SSL === 'true'
+      ? { ssl: { rejectUnauthorized: false } }
+      : {}
   }
 )
 
