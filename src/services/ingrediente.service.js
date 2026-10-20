@@ -120,7 +120,7 @@ const update = async (id, data) => {
   const t = await sequelize.transaction()
   try {
     const ingrediente = await Ingrediente.findByPk(id)
-    if (!ingrediente) return null
+    if (!ingrediente) { await t.rollback(); return null }
     const { precio, ...ingredienteData } = data
     const copias = await copiasEnOtrasSucursales(ingrediente, t)
     await ingrediente.update(ingredienteData, { transaction: t })
