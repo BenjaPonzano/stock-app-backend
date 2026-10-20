@@ -15,7 +15,7 @@ describe('Autenticación - Test de Integración', () => {
   test('POST /api/auth/login - login exitoso con credenciales correctas', async () => {
     const res = await request(app)
       .post('/api/auth/login')
-      .send({ nombre: 'Admin', password: '1234' })
+      .send({ nombre: process.env.ADMIN_NOMBRE || 'admin', password: process.env.ADMIN_PASSWORD || 'admin123' })
     expect(res.status).toBe(200)
     expect(res.body).toHaveProperty('token')
     expect(res.body).toHaveProperty('tipoUsuario')
@@ -24,7 +24,7 @@ describe('Autenticación - Test de Integración', () => {
   test('POST /api/auth/login - login fallido con credenciales incorrectas', async () => {
     const res = await request(app)
       .post('/api/auth/login')
-      .send({ nombre: 'Admin', password: 'wrongpassword' })
+      .send({ nombre: process.env.ADMIN_NOMBRE || 'admin', password: 'wrongpassword' })
     expect(res.status).toBe(401)
   })
 

@@ -40,7 +40,11 @@ const create = async (data) => {
     const insuficientes = []
     for (const item of items) {
       const producto = await Producto.findByPk(item.idProducto)
-      if (producto && producto.stock < item.cant) {
+      // Solo se puede vender lo que es de la sucursal de la venta (si no, se descontaría stock de otra)
+      if (!producto || !producto.activo || (ventaData.idSucursal && producto.idSucursal !== Number(ventaData.idSucursal))) {
+        throw Object.assign(new Error(`El producto ${item.idProducto} no existe en esta sucursal`), { status: 400 })
+      }
+      if (producto.stock < item.cant) {
         insuficientes.push({
           idProducto: producto.idProducto,
           nombre: producto.nombre,

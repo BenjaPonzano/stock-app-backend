@@ -71,6 +71,13 @@ const create = async (data) => {
     const { ingredientesConsumidos, unidades: _ignorado, ...elaboracionData } = data
     // Cada lote rinde "cantPorLote" unidades de la receta: eso es lo que entra al stock.
     const receta = elaboracionData.idReceta ? await Receta.findByPk(elaboracionData.idReceta, { transaction: t }) : null
+    // Producto y receta tienen que ser de la sucursal de la elaboración (si no, se mueve stock de otra)
+    const producto = await Producto.findByPk(elaboracionData.idProducto, { transaction: t })
+    const idSucursal = Number(elaboracionData.idSucursal)
+    if (!producto || !producto.activo || (idSucursal && producto.idSucursal !== idSucursal) ||
+        (receta && idSucursal && receta.idSucursal !== idSucursal)) {
+      throw Object.assign(new Error('El producto o la receta no son de esta sucursal'), { status: 400 })
+    }
     const unidades = elaboracionData.cantidad * (receta?.cantPorLote || 1)
     const elaboracion = await Elaboracion.create({ ...elaboracionData, unidades }, { transaction: t })
 
@@ -95,6 +102,11 @@ const create = async (data) => {
     }
 
     if (consumos.length > 0) {
+      const ingredientes = await Ingrediente.findAll({ where: { idIngrediente: { [Op.in]: consumos.map(i => i.idIngrediente) } }, transaction: t })
+      if (ingredientes.length !== new Set(consumos.map(i => i.idIngrediente)).size ||
+          (idSucursal && ingredientes.some(i => i.idSucursal !== idSucursal))) {
+        throw Object.assign(new Error('Algún ingrediente no es de esta sucursal'), { status: 400 })
+      }
       await DetalleElaboracion.bulkCreate(
         consumos.map(i => ({
           idElaboracion:  elaboracion.idElaboracion,

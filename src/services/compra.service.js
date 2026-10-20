@@ -56,17 +56,14 @@ const create = async (data) => {
     const { proveedor, factura, obs, fecha, items, idSucursal, idUsuario } = data
     const ingreso = await IngresoMercaderia.create({ proveedor, factura, obs, fecha, idSucursal, idUsuario }, { transaction: t })
     for (const item of items) {
-      let itemId = item.id
-      if (!itemId) {
-        if (item.tipo === 'ingrediente') {
-          const ing = await Ingrediente.findOne({ where: { nombre: item.nombre } })
-          itemId = ing?.idIngrediente
-        } else {
-          const prod = await Producto.findOne({ where: { nombre: item.nombre } })
-          itemId = prod?.idProducto
-        }
+      // El ítem tiene que ser de la sucursal de la compra (por id o por nombre), si no se sumaría stock en otra
+      const Modelo = item.tipo === 'ingrediente' ? Ingrediente : Producto
+      const where = { idSucursal, activo: 1, ...(item.id ? { [Modelo.primaryKeyAttribute]: item.id } : { nombre: item.nombre }) }
+      const registro = await Modelo.findOne({ where, transaction: t })
+      if (!registro) {
+        throw Object.assign(new Error(`"${item.nombre || item.id}" no existe en esta sucursal`), { status: 400 })
       }
-      if (!itemId) continue
+      const itemId = registro[Modelo.primaryKeyAttribute]
       if (item.tipo === 'ingrediente') {
         await SumaIngrediente.create({ idIngreso: ingreso.idIngreso, idIngrediente: itemId, idUsuario, idSucursal, cant: item.cant, precioUnitario: item.precio, proveedor, fecha }, { transaction: t })
         await Ingrediente.update(
